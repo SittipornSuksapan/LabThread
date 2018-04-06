@@ -1,6 +1,9 @@
 package com.chan.revernue.labthread;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -11,10 +14,13 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+
+import com.chan.revernue.labthread.service.CounterIntentService;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Object> {
 
@@ -145,10 +151,29 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 //        sampleAsyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, 0, 100);
 
         //6
-        getSupportLoaderManager().initLoader(1, null, this);
+       // getSupportLoaderManager().initLoader(1, null, this);
+
+
+        //7
+
+        LocalBroadcastManager.getInstance(MainActivity.this)
+                .registerReceiver(counterBroadcastReceiver, new IntentFilter("CounterIntentServiceUpdate"));
+
+        Intent intent = new Intent(MainActivity.this, CounterIntentService.class);
+        intent.putExtra("abc", "123");
+        startService(intent);
 
 
     }
+
+    protected BroadcastReceiver counterBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int counter = intent.getIntExtra("counter", 0);
+            tvCounter.setText(counter+ "");
+
+        }
+    };
 
     @Override
     protected void onDestroy() {
@@ -156,6 +181,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         //thread.interrupt();
         //backgroundHandlerThread.quit();
 //        sampleAsyncTask.cancel(true);
+        LocalBroadcastManager.getInstance(MainActivity.this)
+                .unregisterReceiver(counterBroadcastReceiver);
 
     }
 
